@@ -2,10 +2,10 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# ВАШ ТОКЕН от @BotFather
+# ----- ВСТАВЬТЕ СВОЙ ТОКЕН (полученный от @BotFather) -----
 TOKEN = "8961663653:AAFJi2ebXctwpEpLJ0r96R34IcWeIzln1I8"
 
-# ССЫЛКА на ваше мини-приложение (GitHub Pages)
+# ----- ССЫЛКА НА ВАШЕ МИНИ-ПРИЛОЖЕНИЕ (GitHub Pages) -----
 WEBAPP_URL = "https://amaganat726-ops.github.io/conflict/"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -17,14 +17,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 def main():
+    # Создаём приложение с токеном
     app = Application.builder().token(TOKEN).build()
+
+    # Регистрируем команды
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("map", start))  # можно и /map
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 10000)),
-        webhook_url=None  # Render сам задаст URL
-    )
+    app.add_handler(CommandHandler("map", start))  # чтобы можно было вызвать /map
+
+    # Запускаем polling (опрос) — это самый надёжный способ для Render
+    print("✅ Бот запущен и ожидает сообщения...")
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
