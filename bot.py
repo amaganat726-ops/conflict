@@ -3,7 +3,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # ----- ВАШ ТОКЕН (убедитесь, что он правильный) -----
-TOKEN = "8961638653:AAFJ2ebXctwpEpLJ0r96R34IcWeI2lniI8"
+TOKEN = "8961663653:AAFJi2ebXctwpEpLJ0r96R34IcWeIzln1I8"
 
 # ----- ССЫЛКА НА ВАШЕ МИНИ-ПРИЛОЖЕНИЕ (GitHub Pages) -----
 WEBAPP_URL = "https://amaganat726-ops.github.io/conflict_/"
