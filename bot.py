@@ -1,12 +1,17 @@
 import os
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# ----- ВСТАВЬТЕ СВОЙ ТОКЕН (полученный от @BotFather) -----
+# ----- ВАШ ТОКЕН -----
 TOKEN = "8961663653:AAFJi2ebXctwpEpLJ0r96R34IcWeIzln1I8"
 
-# ----- ССЫЛКА НА ВАШЕ МИНИ-ПРИЛОЖЕНИЕ (GitHub Pages) -----
+# ----- ССЫЛКА НА МИНИ-ПРИЛОЖЕНИЕ (GitHub Pages) -----
 WEBAPP_URL = "https://amaganat726-ops.github.io/conflict/"
+
+# ----- АДРЕС ВАШЕГО СЕРВИСА НА RENDER -----
+# Например: https://conflict-ypni.onrender.com
+RENDER_URL = "https://ваш_сервис.onrender.com"   # <-- замените на свой
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [[InlineKeyboardButton("🌀 Открыть карту конфликтов", web_app={"url": WEBAPP_URL})]]
@@ -21,20 +26,21 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("map", start))
 
-    # Получаем порт из переменной окружения (Render задаёт PORT)
+    # Устанавливаем вебхук при старте
+    async def setup_webhook():
+        webhook_url = RENDER_URL  # можно также брать из переменной окружения
+        await app.bot.set_webhook(url=webhook_url)
+        print(f"✅ Webhook установлен на {webhook_url}")
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(setup_webhook())
+
+    # Запускаем вебхук-сервер
     port = int(os.environ.get("PORT", 10000))
-
-    # Получаем URL сервиса из переменной окружения WEBHOOK_URL (обязательно задайте её в настройках Render)
-    webhook_url = os.environ.get("WEBHOOK_URL")
-    if not webhook_url:
-        # Если не задана, используем заглушку (но лучше всегда задавать)
-        webhook_url = "https://ваш_сервис.onrender.com"
-
-    # Запускаем вебхук
     app.run_webhook(
         listen="0.0.0.0",
         port=port,
-        webhook_url=webhook_url
+        webhook_url=RENDER_URL  # этот параметр нужен для проверки, но фактически вебхук уже установлен
     )
 
 if __name__ == "__main__":
