@@ -40,7 +40,7 @@
         #top-container h2 { font-weight: 300; font-size: 1.2rem; letter-spacing: 2px; margin: 0 0 16px 0; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 10px; }
         #top-container h2 span { font-size: 1.4rem; }
         .top-list { display: flex; flex-direction: column; gap: 6px; }
-        .top-item { display: flex; align-items: center; padding: 6px 12px; border-radius: 12px; background: rgba(255,255,255,0.03); transition: background 0.2s; gap: 12px; }
+        .top-item { display: flex; align-items: center; padding: 6px 12px; border-radius: 12px; background: rgba(255,255,255,0.03); transition: background 0.2s; gap: 12px; cursor: pointer; }
         .top-item:hover { background: rgba(255,255,255,0.07); }
         .top-rank { font-weight: 600; font-size: 1rem; min-width: 36px; color: rgba(255,255,255,0.5); text-align: center; }
         .top-rank.gold { color: #ffd700; }
@@ -77,7 +77,7 @@
         <span class="legend-item"><span class="color-dot" style="background:#2ecc71;"></span> мало</span>
         <span class="legend-item"><span class="color-dot" style="background:#f1c40f;"></span> средне</span>
         <span class="legend-item"><span class="color-dot" style="background:#e74c3c;"></span> много</span>
-        <span class="legend-hint"></span>
+        <span class="legend-hint">⚡ перетащи — создать · на телефоне: 1 тап — выбор, 2-й по другому — конфликт, 3 быстрых тапа — удалить · клик по линии — удалить конфликт</span>
     </div>
     <div id="top-container">
         <h2><span>🏆</span> ТОП по конфликтам</h2>
@@ -163,6 +163,7 @@
             return count;
         }
 
+        // ОБНОВЛЁННАЯ ФУНКЦИЯ TOP (без CSS)
         function updateTop() {
             const listEl = document.getElementById('top-list');
             if (!people.length) {
@@ -181,16 +182,54 @@
                 if (rank === 1) { rankClass = 'gold'; rankSymbol = '🥇'; }
                 else if (rank === 2) { rankClass = 'silver'; rankSymbol = '🥈'; }
                 else if (rank === 3) { rankClass = 'bronze'; rankSymbol = '🥉'; }
+
+                // Список конфликтов
+                const conflictNames = conflicts
+                    .filter(([a,b]) => a === p.id || b === p.id)
+                    .map(([a,b]) => {
+                        const otherId = a === p.id ? b : a;
+                        const other = people.find(p => p.id === otherId);
+                        return other ? other.name : '?';
+                    })
+                    .filter((v, i, self) => self.indexOf(v) === i);
+
+                let conflictHtml = '';
+                if (conflictNames.length) {
+                    conflictHtml = conflictNames.map(name =>
+                        `<span style="display:block; background:rgba(255,255,255,0.08); padding:4px 12px; border-radius:12px; font-size:12px; margin-bottom:4px;">${name}</span>`
+                    ).join('');
+                } else {
+                    conflictHtml = `<span style="display:block; color:#888; font-size:12px;">Нет конфликтов</span>`;
+                }
+
                 html += `
-                    <div class="top-item">
+                    <div class="top-item" data-id="${p.id}">
                         <div class="top-rank ${rankClass}">${rankSymbol}</div>
                         <div class="top-name">${p.name}</div>
                         <div class="top-bar"><div class="top-bar-fill" style="width: ${percent}%;"></div></div>
                         <div class="top-count">${count}</div>
                     </div>
+                    <div class="top-conflict-list" data-id="${p.id}" style="display:none; padding-left:48px; margin-top:4px; flex-direction:column; gap:4px;">
+                        ${conflictHtml}
+                    </div>
                 `;
             });
             listEl.innerHTML = html;
+
+            // Переключение видимости по клику
+            document.querySelectorAll('.top-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const list = document.querySelector(`.top-conflict-list[data-id="${id}"]`);
+                    if (list) {
+                        if (list.style.display === 'none' || list.style.display === '') {
+                            list.style.display = 'flex';
+                        } else {
+                            list.style.display = 'none';
+                        }
+                    }
+                });
+            });
         }
 
         let dragData = null;
@@ -199,7 +238,6 @@
             const container = document.getElementById('graph-container');
             const width = container.clientWidth || 700;
             const height = container.clientHeight || 700;
-            // Оптимальный отступ -30
             const radius = Math.min(width, height) / 2 - 30;
 
             d3.select(container).selectAll('*').remove();
@@ -269,7 +307,7 @@
                 .style('cursor', 'grab');
 
             const circles = nodeGroup.append('circle')
-                .attr('r', 20)  // размер 20
+                .attr('r', 20)
                 .style('fill', d => getColorByCount(d.count, maxCount))
                 .style('transition', 'fill 0.3s, stroke 0.2s')
                 .attr('class', d => d.id === selectedId ? 'selected' : '')
@@ -298,12 +336,12 @@
                 event.preventDefault();
                 handleTap(d.id);
             }, { passive: false })
-            .on('mouseenter', function() { d3.select(this).transition().attr('r', 24); }) // при наведении 24
-            .on('mouseleave', function() { d3.select(this).transition().attr('r', 20); }); // обратно 20
+            .on('mouseenter', function() { d3.select(this).transition().attr('r', 24); })
+            .on('mouseleave', function() { d3.select(this).transition().attr('r', 20); });
 
             nodeGroup.append('text')
                 .text(d => d.name)
-                .style('font-size', '13px')  // шрифт 13
+                .style('font-size', '13px')
                 .style('fill', '#fff')
                 .style('text-anchor', 'middle')
                 .style('dominant-baseline', 'central')
@@ -322,7 +360,7 @@
                 dragData.line.remove();
                 const [x, y] = d3.pointer(event, g.node());
                 let targetNode = null;
-                const threshold = 26; // порог 26
+                const threshold = 26;
                 for (const node of nodes) {
                     const dx = node.x - x;
                     const dy = node.y - y;
