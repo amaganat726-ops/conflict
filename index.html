@@ -7,71 +7,31 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: radial-gradient(circle at 30% 10%, #1a1a2e, #0f0f1a);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            padding: 20px;
-            margin: 0;
-            touch-action: pan-y;
-        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: radial-gradient(circle at 30% 10%, #1a1a2e, #0f0f1a); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 20px; margin: 0; touch-action: pan-y; }
         h1 { font-weight: 300; font-size: 2.4rem; letter-spacing: 4px; margin-bottom: 10px; background: linear-gradient(135deg, #f7971e, #ffd200); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 40px rgba(247,151,30,0.2); }
         #controls { background: rgba(26,26,46,0.7); backdrop-filter: blur(10px); padding: 14px 24px; border-radius: 60px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 32px rgba(0,0,0,0.5); width: 100%; max-width: 500px; }
-        #controls input {
-            padding: 10px 18px;
-            border-radius: 40px;
-            border: 1px solid rgba(255,255,255,0.15);
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-            font-size: 16px; /* ← фикс для зума на мобильных */
-            flex: 1;
-            min-width: 160px;
-            transition: border 0.3s, box-shadow 0.3s;
-        }
+        #controls input { padding: 10px 18px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #fff; font-size: 16px; flex: 1; min-width: 160px; transition: border 0.3s, box-shadow 0.3s; }
         #controls input::placeholder { color: rgba(255,255,255,0.35); }
         #controls input:focus { outline: none; border-color: #f7971e; box-shadow: 0 0 20px rgba(247,151,30,0.15); }
         #controls button { padding: 10px 22px; border-radius: 40px; border: none; background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; font-weight: 600; font-size: 15px; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(247,151,30,0.3); }
         #controls button:hover { transform: scale(1.04); box-shadow: 0 6px 25px rgba(247,151,30,0.5); }
         #controls button:active { transform: scale(0.96); }
-        #graph-container {
-            width: 100%;
-            max-width: 750px;
-            aspect-ratio: 1/1;
-            background: radial-gradient(circle at center, #1e1e32, #12121f);
-            border-radius: 32px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.7), inset 0 0 60px rgba(247,151,30,0.03);
-            position: relative;
-            border: 1px solid rgba(255,255,255,0.04);
-            transition: box-shadow 0.4s;
-            touch-action: none;
-        }
+        #graph-container { width: 100%; max-width: 750px; aspect-ratio: 1/1; background: radial-gradient(circle at center, #1e1e32, #12121f); border-radius: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.7), inset 0 0 60px rgba(247,151,30,0.03); position: relative; border: 1px solid rgba(255,255,255,0.04); transition: box-shadow 0.4s; touch-action: none; }
         #graph-container:hover { box-shadow: 0 20px 70px rgba(0,0,0,0.8), inset 0 0 80px rgba(247,151,30,0.06); }
         .empty-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.2); font-size: 26px; font-weight: 300; letter-spacing: 2px; pointer-events: none; }
         .link { stroke-opacity: 0.85; stroke-linecap: round; cursor: pointer; transition: stroke-width 0.25s ease, stroke-opacity 0.25s ease, filter 0.3s; filter: drop-shadow(0 0 6px rgba(255,100,50,0.15)); }
         .link:hover { stroke-width: 6px !important; stroke-opacity: 1; filter: drop-shadow(0 0 16px rgba(255,100,50,0.5)); }
         .drag-line { stroke: #ffd200; stroke-width: 3px; stroke-dasharray: 8 6; stroke-opacity: 0.9; pointer-events: none; filter: drop-shadow(0 0 12px rgba(255,210,0,0.6)); }
-        .node circle {
-            stroke: rgba(255,255,255,0.6);
-            stroke-width: 2.5px;
-            cursor: grab;
-            transition: r 0.25s ease, filter 0.3s, stroke-width 0.2s, stroke 0.2s;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
-        }
+        .node circle { stroke: rgba(255,255,255,0.6); stroke-width: 2.5px; cursor: grab; transition: r 0.25s ease, filter 0.3s, stroke-width 0.2s, stroke 0.2s; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
         .node circle:hover { filter: drop-shadow(0 0 24px rgba(247,151,30,0.5)); stroke-width: 3px; }
         .node circle:active { cursor: grabbing; }
         .node circle.selected { stroke: #ffd700 !important; stroke-width: 4px; filter: drop-shadow(0 0 20px rgba(255,215,0,0.7)); }
-        .node text { fill: #fff; font-size: 14px; font-weight: 500; text-anchor: middle; dominant-baseline: central; pointer-events: none; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6); letter-spacing: 0.3px; }
+        .node text { fill: #fff; font-size: 13px; font-weight: 500; text-anchor: middle; dominant-baseline: central; pointer-events: none; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6); letter-spacing: 0.3px; }
         .legend { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 24px 40px; justify-content: center; font-size: 14px; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.2); padding: 12px 28px; border-radius: 40px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.04); }
         .legend-item { display: flex; align-items: center; gap: 10px; }
         .color-dot { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 0 10px rgba(0,0,0,0.3); }
@@ -125,7 +85,6 @@
     </div>
 
     <script>
-        // ---------- Firebase Config (ВАШ) ----------
         const firebaseConfig = {
             apiKey: "AIzaSyASALrRA9gmF2Oq-mJxg0IPKct_5QNcYFg",
             authDomain: "conflictmap-d967c.firebaseapp.com",
@@ -136,18 +95,14 @@
             appId: "1:499783786939:web:6991fee08a2852c957a49e",
             measurementId: "G-9HLMN0RJZB"
         };
-        // -------------------------------------------------------
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // ---------- Данные ----------
         let people = [];
         let conflicts = [];
         let isLocalChange = false;
-        let selectedId = null; // для выбора тапом
+        let selectedId = null;
 
-        // ---------- Сохранение/загрузка ----------
         function saveToFirebase() {
             if (isLocalChange) return;
             isLocalChange = true;
@@ -178,7 +133,6 @@
             });
         }
 
-        // ---------- Цвета ----------
         function getColorByCount(count, maxCount) {
             if (maxCount === 0) return '#2ecc71';
             const ratio = count / maxCount;
@@ -239,14 +193,14 @@
             listEl.innerHTML = html;
         }
 
-        // ---------- Отрисовка графа ----------
         let dragData = null;
 
         function drawGraph() {
             const container = document.getElementById('graph-container');
             const width = container.clientWidth || 700;
             const height = container.clientHeight || 700;
-            const radius = Math.min(width, height) / 2 - 65;
+            // Увеличиваем радиус, чтобы имена были дальше друг от друга
+            const radius = Math.min(width, height) / 2 - 40; // было -65
 
             d3.select(container).selectAll('*').remove();
 
@@ -279,7 +233,6 @@
                 };
             });
 
-            // Линии
             const linkData = conflicts.map(([i, j]) => {
                 const source = nodes.find(n => n.id === i);
                 const target = nodes.find(n => n.id === j);
@@ -305,7 +258,6 @@
                     saveToFirebase();
                 });
 
-            // Узлы
             const clickCounters = new Map();
 
             const nodeGroup = g.selectAll('.node')
@@ -317,14 +269,12 @@
                 .style('cursor', 'grab');
 
             const circles = nodeGroup.append('circle')
-                .attr('r', 28)
+                .attr('r', 22)  // уменьшили с 28 до 22
                 .style('fill', d => getColorByCount(d.count, maxCount))
                 .style('transition', 'fill 0.3s, stroke 0.2s')
-                .attr('class', d => d.id === selectedId ? 'selected' : '');
+                .attr('class', d => d.id === selectedId ? 'selected' : '')
 
-            // ----- Обработчики для мыши (десктоп) -----
             circles.on('mousedown', function(event, d) {
-                // Начало перетаскивания
                 event.preventDefault();
                 const sourceNode = d;
                 const startX = d.x;
@@ -341,24 +291,19 @@
                 svg.on('mouseleave', onDragEnd);
             })
             .on('click', function(event, d) {
-                // Если было перетаскивание — игнорируем
                 if (dragData) return;
                 handleTap(d.id);
-            });
-
-            // ----- Обработчики для тач (мобильные) -----
-            // Добавляем отдельно, чтобы точно ловить тапы
-            circles.on('touchstart', function(event, d) {
-                // Отменяем поведение по умолчанию (чтобы не было зума и прокрутки)
+            })
+            .on('touchstart', function(event, d) {
                 event.preventDefault();
-                // Обрабатываем как тап (если это не долгое нажатие — мы не реализуем перетаскивание на таче)
                 handleTap(d.id);
-            }, { passive: false });
+            }, { passive: false })
+            .on('mouseenter', function() { d3.select(this).transition().attr('r', 26); }) // был 32
+            .on('mouseleave', function() { d3.select(this).transition().attr('r', 22); }); // был 28
 
-            // Текст
             nodeGroup.append('text')
                 .text(d => d.name)
-                .style('font-size', '14px')
+                .style('font-size', '13px')  // уменьшили с 14
                 .style('fill', '#fff')
                 .style('text-anchor', 'middle')
                 .style('dominant-baseline', 'central')
@@ -366,7 +311,6 @@
                 .style('pointer-events', 'none')
                 .attr('dy', 1);
 
-            // Drag-обработчики для мыши
             function onDragMove(event) {
                 if (!dragData) return;
                 const [x, y] = d3.pointer(event, g.node());
@@ -378,7 +322,7 @@
                 dragData.line.remove();
                 const [x, y] = d3.pointer(event, g.node());
                 let targetNode = null;
-                const threshold = 34;
+                const threshold = 28; // немного уменьшили порог, т.к. кружки меньше
                 for (const node of nodes) {
                     const dx = node.x - x;
                     const dy = node.y - y;
@@ -403,27 +347,21 @@
                 svg.on('mouseleave', null);
             }
 
-            // Общая функция для обработки тапа/клика (выбор, создание конфликта, удаление)
             function handleTap(id) {
-                // Логика тройного клика для удаления
                 if (!clickCounters.has(id)) {
                     clickCounters.set(id, { count: 0, timer: null });
                 }
                 const counter = clickCounters.get(id);
                 counter.count++;
-
                 if (counter.timer) clearTimeout(counter.timer);
                 counter.timer = setTimeout(() => {
                     counter.count = 0;
                     counter.timer = null;
                 }, 400);
-
                 if (counter.count === 3) {
-                    // Тройной клик — удаляем участника
                     clearTimeout(counter.timer);
                     counter.count = 0;
                     counter.timer = null;
-
                     people = people.filter(p => p.id !== id);
                     conflicts = conflicts.filter(([a,b]) => a !== id && b !== id);
                     people.forEach((p, idx) => p.id = idx);
@@ -435,18 +373,13 @@
                     saveToFirebase();
                     return;
                 }
-
-                // Если не тройной клик — логика выбора/создания
                 if (selectedId === null) {
-                    // Первый тап — выделяем
                     selectedId = id;
                     d3.selectAll('.node circle').classed('selected', d => d.id === selectedId);
                 } else if (selectedId === id) {
-                    // Тап по тому же — снимаем выделение
                     selectedId = null;
                     d3.selectAll('.node circle').classed('selected', false);
                 } else {
-                    // Тап по другому — создаём конфликт
                     const id1 = selectedId;
                     const id2 = id;
                     const exists = conflicts.some(([a,b]) => (a===id1 && b===id2) || (a===id2 && b===id1));
@@ -455,20 +388,14 @@
                         drawGraph();
                         saveToFirebase();
                     }
-                    // Снимаем выделение
                     selectedId = null;
                     d3.selectAll('.node circle').classed('selected', false);
                 }
             }
 
-            // Анимация при наведении
-            circles.on('mouseenter', function() { d3.select(this).transition().attr('r', 32); })
-                   .on('mouseleave', function() { d3.select(this).transition().attr('r', 28); });
-
             updateTop();
         }
 
-        // ---------- Обработчики UI ----------
         document.getElementById('addPerson').addEventListener('click', () => {
             const input = document.getElementById('newName');
             const name = input.value.trim();
@@ -485,7 +412,6 @@
             if (e.key === 'Enter') document.getElementById('addPerson').click();
         });
 
-        // ---------- Запуск ----------
         loadFromFirebase();
 
         const tg = window.Telegram?.WebApp;
