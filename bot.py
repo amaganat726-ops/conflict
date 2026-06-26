@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 TOKEN = "8961663653:AAFJi2ebXctwpEpLJ0r96R34IcWeIzln1I8"
 
 # ----- ССЫЛКА НА МИНИ-ПРИЛОЖЕНИЕ (GitHub Pages) -----
-WEBAPP_URL = "https://amaganat726-ops.github.io/conflict_/"
+WEBAPP_URL = "https://amaganat726-ops.github.io/conflict/"
 
 # ----- АДРЕС ВАШЕГО СЕРВИСА НА RENDER (для вебхука) -----
 RENDER_URL = "https://conflict-ypni.onrender.com"
