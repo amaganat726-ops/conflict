@@ -17,16 +17,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 def main():
-    # Создаём приложение с токеном
     app = Application.builder().token(TOKEN).build()
-
-    # Регистрируем команды
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("map", start))  # чтобы можно было вызвать /map
+    app.add_handler(CommandHandler("map", start))
 
-    # Запускаем polling (опрос) — это самый надёжный способ для Render
-    print("✅ Бот запущен и ожидает сообщения...")
-    app.run_polling()
+    # Получаем порт из переменной окружения (Render задаёт PORT)
+    port = int(os.environ.get("PORT", 10000))
+
+    # Получаем URL сервиса из переменной окружения WEBHOOK_URL (обязательно задайте её в настройках Render)
+    webhook_url = os.environ.get("WEBHOOK_URL")
+    if not webhook_url:
+        # Если не задана, используем заглушку (но лучше всегда задавать)
+        webhook_url = "https://ваш_сервис.onrender.com"
+
+    # Запускаем вебхук
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        webhook_url=webhook_url
+    )
 
 if __name__ == "__main__":
     main()
