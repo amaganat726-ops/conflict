@@ -8,13 +8,26 @@ TOKEN = "8961663653:AAFJi2ebXctwpEpLJ0r96R34IcWeIzln1I8"
 # ----- ССЫЛКА НА МИНИ-ПРИЛОЖЕНИЕ (GitHub Pages) -----
 WEBAPP_URL = "https://amaganat726-ops.github.io/conflict/"
 
-# ----- АДРЕС ВАШЕГО СЕРВИСА НА RENDER (для вебхука) -----
+# ----- АДРЕС ВАШЕГО СЕРВИСА НА RENDER -----
 RENDER_URL = "https://conflict-ypni.onrender.com"
+
+# ----- USERNAME БОТА (без @) -----
+BOT_USERNAME = "ConflictMap_Bot"   # замените на реальный юзернейм
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_type = update.effective_chat.type
 
-    # Для личных чатов – кнопка web_app
+    # Если это переход из группы с параметром app
+    if chat_type == "private" and context.args and context.args[0] == "app":
+        keyboard = [[InlineKeyboardButton("🌀 Открыть карту конфликтов", web_app={"url": WEBAPP_URL})]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(
+            "Нажмите кнопку, чтобы открыть карту конфликтов:",
+            reply_markup=reply_markup
+        )
+        return
+
+    # Обычный /start в личном чате
     if chat_type == "private":
         keyboard = [[InlineKeyboardButton("🌀 Открыть карту конфликтов", web_app={"url": WEBAPP_URL})]]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -23,11 +36,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=reply_markup
         )
     else:
-        # Для групп – обычная кнопка с URL (откроется в браузере)
-        keyboard = [[InlineKeyboardButton("🌀 Открыть карту конфликтов", url=WEBAPP_URL)]]
+        # В группе – только одна кнопка: переход в личный чат с ботом
+        keyboard = [[InlineKeyboardButton("📱 Открыть в мини-приложении", url=f"https://t.me/{BOT_USERNAME}?start=app")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            "Нажмите кнопку, чтобы открыть карту конфликтов (откроется в браузере):",
+            "Нажмите кнопку, чтобы открыть карту конфликтов в мини-приложении (перейдёте в личный чат с ботом):",
             reply_markup=reply_markup
         )
 
@@ -37,8 +50,6 @@ def main():
     app.add_handler(CommandHandler("map", start))
 
     port = int(os.environ.get("PORT", 10000))
-
-    # Запускаем вебхук
     app.run_webhook(
         listen="0.0.0.0",
         port=port,
